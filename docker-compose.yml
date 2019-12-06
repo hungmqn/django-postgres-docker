@@ -1,17 +1,30 @@
-version: '3'
+version: "3.7"
 
 services:
   db:
     image: postgres
-    volumes:
-      - db-django:/var/lib/postgresql/data:delegated
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - 5432:5432
-  web:
-    build: . 
-    command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; python manage.py runserver 0.0.0.0:8000'
     volumes:
-      - ./src:/app:delegated
+      - db-django:/var/lib/postgresql/data:delegated
+  server:
+    build: ./src/server
+    command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; python manage.py runserver 0.0.0.0:8000'
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+      DB_ENGINE: ${DB_ENGINE}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PWD: ${DB_PWD}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+    volumes:
+      - ./src/server:/app:delegated
     ports:
       - 8000:8000
     depends_on:
